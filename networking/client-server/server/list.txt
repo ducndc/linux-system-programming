@@ -3,5 +3,4 @@ b.out
 c.out
 d.out
 ID-1.jpg
-%s
 t.txt

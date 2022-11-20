@@ -2,13 +2,19 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/ioctl.h>
+#include <sys/poll.h>
 
 #define SIZE 80
 #define PORT 8080
 #define SA struct sockaddr
+#define MAX_CLIENT 10
+#define TRUE             1
+#define FALSE            0
 
 void update_file_list();
 
@@ -65,12 +71,11 @@ int send_file_list(int connfd)
     FILE *p_fd;
     char data[SIZE];
 
-    p_fd = fopen("list.txt", "r");
+    p_fd = fopen("list.txt", "rb");
 
     while (fgets(data, SIZE, p_fd) != NULL)
     {
         write(connfd, data, sizeof(data));
-        printf("%s", data);
         bzero(data, SIZE);
     }
     write(connfd, "complete", 8);
@@ -81,14 +86,13 @@ int send_file(FILE *fp, int sockfd)
     printf("sending file ...\n");
     char data[SIZE] = {0};
     int total_data = 0;
-    while(fgets(data, SIZE, fp) != NULL)
+    while (fread(data, SIZE, 1, fp) != NULL)
     {
-        if(send(sockfd, data, sizeof(data), 0) == -1)
+        if (send(sockfd, data, sizeof(data), 0) == -1)
         {
             perror("Error in sending data");
             exit(1);
         }
-        printf("data: %s", data);
         bzero(data, SIZE);
     }
     write(sockfd, "complete", 8);
@@ -104,8 +108,20 @@ void update_file_list()
 
 int main()
 {
-    int sockfd, connfd, len;
-    struct sockaddr_in servaddr, cli;
+    int sockfd;
+    int connfd;
+    int len;
+    int on = 1;
+    int timeout;
+    int rc;
+    struct sockaddr_in servaddr;
+    struct sockaddr_in cli;
+    struct pollfd fds[MAX_CLIENT];
+    int nfds = 1;
+    int current_size = 0;
+    int new_sd = -1;
+    int end_server = FALSE;
+    int compress_array = FALSE;
 
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -119,6 +135,23 @@ int main()
         printf("Socket successfully created..\n");
     }
     bzero(&servaddr, sizeof(servaddr));
+
+    rc = setsockopt(sockfd, SOL_SOCKET,  SO_REUSEADDR,
+                      (char *)&on, sizeof(on));
+    if (rc < 0)
+    {
+      perror("setsockopt() failed");
+      close(sockfd);
+      return (-1);
+    }
+
+    rc = ioctl(sockfd, FIONBIO, (char *)&on);
+    if (rc < 0)
+    {
+      perror("ioctl() failed");
+      close(sockfd);
+      return (-1);
+    }
 
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
@@ -137,7 +170,7 @@ int main()
     }
 
     // Now server is ready to listen and verification
-    if ((listen(sockfd, 5)) != 0) 
+    if ((listen(sockfd, 32)) != 0) 
     {
         printf("Listen failed...\n");
         exit(0);
@@ -147,22 +180,108 @@ int main()
         printf("Server listening..\n");
     }
     len = sizeof(cli);
+    memset(fds, 0, sizeof(fds));
 
-    // Accept the data packet from client and verification
-    connfd = accept(sockfd, (SA*)&cli, &len);
-    if (connfd < 0) 
+    fds[0].fd = sockfd;
+    fds[0].events = POLLIN;
+
+    timeout = (3 * 60 * 1000); //3 min
+
+    do 
     {
-        printf("server accept failed...\n");
-        exit(0);
-    }
-    else
-    {
-        printf("server accept the client...\n");
-    }
+        printf("Waiting on poll()...\n");
+        rc = poll(fds, nfds, timeout);
 
-    // Function for chatting between client and server
-    func(connfd);
+        if (rc < 0)
+        {
+          perror("  poll() failed");
+          break;
+        }
 
-    // After chatting close the socket
-    close(sockfd);
+        if (rc == 0)
+        {
+          printf("  poll() timed out.  End program.\n");
+          break;
+        }
+
+        current_size = nfds;
+        for (int  i = 0; i < current_size; i++)
+        {
+            if (fds[i].revents == 0)
+            {
+                continue;
+            }
+
+            if (fds[i].revents != POLLIN)
+            {
+                printf("Error revents = %d\n", fds[i].revents);
+                break;
+            }
+            if (fds[i].fd == sockfd)
+            {
+                printf("Listening socket is readable\n");
+                do 
+                {
+                    new_sd = accept(sockfd, (SA*)&cli, &len);
+                    if (new_sd < 0)
+                    {
+                        if (errno != EWOULDBLOCK)
+                        {
+                          perror("  accept() failed");
+                          end_server = TRUE;
+                        }
+                        break;
+                    }
+                    printf("New incoming connection %d\n", new_sd);
+                    fds[nfds].fd = new_sd;
+                    fds[nfds].events = POLLIN;
+                    nfds++;
+                } 
+                while (new_sd != -1);
+            }
+            else 
+            {
+                printf("  Descriptor %d is readable\n", fds[i].fd);
+
+                func(fds[i].fd);
+            }
+        }
+
+        if (compress_array)
+        {
+          compress_array = FALSE;
+          for (int i = 0; i < nfds; i++)
+          {
+            if (fds[i].fd == -1)
+            {
+              for(int j = i; j < nfds; j++)
+              {
+                fds[j].fd = fds[j+1].fd;
+              }
+              i--;
+              nfds--;
+            }
+          }
+        }
+
+    }
+    while (end_server == FALSE);
+
+    // // Accept the data packet from client and verification
+    // connfd = accept(sockfd, (SA*)&cli, &len);
+    // if (connfd < 0) 
+    // {
+    //     printf("server accept failed...\n");
+    //     exit(0);
+    // }
+    // elses
+    // {
+    //     printf("server accept the client...\n");
+    // }
+
+    // // Function for chatting between client and server
+    // func(connfd);
+
+    // // After chatting close the socket
+    // close(sockfd);
 }

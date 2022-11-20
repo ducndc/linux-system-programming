@@ -21,7 +21,7 @@ void write_file(int sockfd, char *file_name)
     FILE *fp;
     char buff[SIZE];
 
-    fp = fopen(file_name, "w");
+    fp = fopen(file_name, "wb");
     if(fp == NULL)
     {
         perror("[-]Error in creating file.");
@@ -35,11 +35,9 @@ void write_file(int sockfd, char *file_name)
         	printf("=========\n");
         	break;
         }
-        fprintf(fp, "%s", buff);
-        printf("%s", buff);
+        fwrite(buff, sizeof(buff), 1, fp);
         bzero(buff, SIZE);
     }
-    
 }
 
 void func(int sockfd)
