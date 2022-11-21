@@ -1,0 +1,148 @@
+  The definition of the msghdr structure employed by sendmsg() is
+         as follows:
+         
+                    struct msghdr {
+                                       void         *msg_name;       /* Optional address */
+                                                      socklen_t     msg_namelen;    /* Size of address */
+                                                                     struct iovec *msg_iov;        /* Scatter/gather
+                                                                     array */
+                                                                                    size_t        msg_iovlen;     /* #
+                                                                                    elements in msg_iov */
+                                                                                                   void
+                                                                                                   *msg_control;    /*
+                                                                                                   Ancillary data, see
+                                                                                                   below */
+                                                                                                                  size_t
+                                                                                                                  msg_controllen;
+                                                                                                                  /* Ancillary
+                                                                                                                   * data
+                                                                                                                   * buffer
+                                                                                                                   * len
+                                                                                                                   * */
+                                                                                                                                  int
+                                                                                                                                  msg_flags;
+                                                                                                                                  /* Flags
+                                                                                                                                   * (unused)
+                                                                                                                                   * */
+                                                                                                                                              };
+                                                                                                                                              
+                                                                                                                                                     The
+                                                                                                                                                     msg_name
+                                                                                                                                                     field
+                                                                                                                                                     is
+                                                                                                                                                     used
+                                                                                                                                                     on
+                                                                                                                                                     an
+                                                                                                                                                     unconnected
+                                                                                                                                                     socket
+                                                                                                                                                     to
+                                                                                                                                                     specify
+                                                                                                                                                            the
+                                                                                                                                                            target
+                                                                                                                                                            address
+                                                                                                                                                            for
+                                                                                                                                                                a
+                                                                                                                                                                datagram.
+                                                                                                                                                                It
+                                                                                                                                                                points
+                                                                                                                                                                to
+                                                                                                                                                                a
+                                                                                                                                                                buffer
+                                                                                                                                                                       containing
+                                                                                                                                                                       the
+                                                                                                                                                                       address;
+                                                                                                                                                                       the
+                                                                                                                                                                       msg_namelen
+                                                                                                                                                                       field
+                                                                                                                                                                       should
+                                                                                                                                                                       be
+                                                                                                                                                                       set
+                                                                                                                                                                       to
+                                                                                                                                                                              the
+                                                                                                                                                                              size
+                                                                                                                                                                              of
+                                                                                                                                                                              the
+                                                                                                                                                                              address.
+                                                                                                                                                                              For
+                                                                                                                                                                              a
+                                                                                                                                                                              connected
+                                                                                                                                                                              socket,
+                                                                                                                                                                              these
+                                                                                                                                                                              fields
+                                                                                                                                                                                     should
+                                                                                                                                                                                     be
+                                                                                                                                                                                     specified
+                                                                                                                                                                                     as
+                                                                                                                                                                                     NULL
+                                                                                                                                                                                     and
+                                                                                                                                                                                     0,
+                                                                                                                                                                                     respectively.
+                                                                                                                                                                                     
+                                                                                                                                                                                            The
+                                                                                                                                                                                            msg_iov
+                                                                                                                                                                                            and
+                                                                                                                                                                                            msg_iovlen
+                                                                                                                                                                                            fields
+                                                                                                                                                                                            specify
+                                                                                                                                                                                            scatter-gather
+                                                                                                                                                                                                   locations,
+                                                                                                                                                                                                   as
+                                                                                                                                                                                                   for
+                                                                                                                                                                                                       writev(2).
+                                                                                                                                                                                                       
+                                                                                                                                                                                                              You
+                                                                                                                                                                                                              may
+                                                                                                                                                                                                              send
+                                                                                                                                                                                                              control
+                                                                                                                                                                                                              information
+                                                                                                                                                                                                              (ancillary
+                                                                                                                                                                                                              data)
+                                                                                                                                                                                                              using
+                                                                                                                                                                                                              the
+                                                                                                                                                                                                                     msg_control
+                                                                                                                                                                                                                     and
+                                                                                                                                                                                                                     msg_controllen
+                                                                                                                                                                                                                     members.
+                                                                                                                                                                                                                     The
+                                                                                                                                                                                                                     maximum
+                                                                                                                                                                                                                     control
+                                                                                                                                                                                                                            buffer
+                                                                                                                                                                                                                            length
+                                                                                                                                                                                                                            the
+                                                                                                                                                                                                                            kernel
+                                                                                                                                                                                                                            can
+                                                                                                                                                                                                                            process
+                                                                                                                                                                                                                            is
+                                                                                                                                                                                                                            limited
+                                                                                                                                                                                                                            per
+                                                                                                                                                                                                                            socket
+                                                                                                                                                                                                                            by
+                                                                                                                                                                                                                            the
+                                                                                                                                                                                                                                   value
+                                                                                                                                                                                                                                   in
+                                                                                                                                                                                                                                   /proc/sys/net/core/optmem_max;
+                                                                                                                                                                                                                                   see
+                                                                                                                                                                                                                                   socket(7).
+                                                                                                                                                                                                                                   For
+                                                                                                                                                                                                                                          further
+                                                                                                                                                                                                                                          information
+                                                                                                                                                                                                                                          on
+                                                                                                                                                                                                                                          the
+                                                                                                                                                                                                                                          use
+                                                                                                                                                                                                                                          of
+                                                                                                                                                                                                                                          ancillary
+                                                                                                                                                                                                                                          data
+                                                                                                                                                                                                                                          in
+                                                                                                                                                                                                                                          various
+                                                                                                                                                                                                                                                 socket
+                                                                                                                                                                                                                                                 domains,
+                                                                                                                                                                                                                                                 see
+                                                                                                                                                                                                                                                 unix(7)
+                                                                                                                                                                                                                                                 and
+                                                                                                                                                                                                                                                 ip(7).
+                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                        The
+                                                                                                                                                                                                                                                        msg_flags
+                                                                                                                                                                                                                                                        field
+                                                                                                                                                                                                                                                        is
+                                                                                                                                                                                                                                                        ignored.hello nguyen dang chung duc chung duc nguyen dang

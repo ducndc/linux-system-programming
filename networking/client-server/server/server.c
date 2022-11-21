@@ -17,6 +17,8 @@
 #define FALSE            0
 
 void update_file_list();
+int send_file_list(int sockfd);
+int send_file(FILE *fp, int sockfd);
 
 void func(int connfd)
 {
@@ -39,7 +41,7 @@ void func(int connfd)
         }
         if (0 == strncmp(buff, "GET", 3))
         {
-            printf("Client request to get file list in server\n");
+            printf("Client request to get a file in server\n");
             write(connfd, "ok", 2);
             bzero(buff, sizeof(buff));
             read(connfd, buff, sizeof(buff));
@@ -115,13 +117,13 @@ int main()
     int timeout;
     int rc;
     struct sockaddr_in servaddr;
-    struct sockaddr_in cli;
     struct pollfd fds[MAX_CLIENT];
     int nfds = 1;
     int current_size = 0;
     int new_sd = -1;
     int end_server = FALSE;
     int compress_array = FALSE;
+    int close_connection;
 
     // socket create and verification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -179,7 +181,7 @@ int main()
     {
         printf("Server listening..\n");
     }
-    len = sizeof(cli);
+
     memset(fds, 0, sizeof(fds));
 
     fds[0].fd = sockfd;
@@ -222,7 +224,7 @@ int main()
                 printf("Listening socket is readable\n");
                 do 
                 {
-                    new_sd = accept(sockfd, (SA*)&cli, &len);
+                    new_sd = accept(sockfd, NULL, NULL);
                     if (new_sd < 0)
                     {
                         if (errno != EWOULDBLOCK)
@@ -242,8 +244,15 @@ int main()
             else 
             {
                 printf("  Descriptor %d is readable\n", fds[i].fd);
-
+                close_connection = FALSE;
                 func(fds[i].fd);
+
+                if (close_connection)
+                {
+                    close(fds[i].fd);
+                    fds[i].fd = -1;
+                    compress_array = TRUE;
+                }
             }
         }
 
