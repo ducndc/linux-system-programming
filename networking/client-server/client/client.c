@@ -9,14 +9,16 @@
 
 #define SIZE 80
 #define PORT 8080
+#define IP_ADDRESS "127.0.0.1"
 #define SA struct sockaddr
 
 int show_file(int sockfd);
 int get_file(int sockfd);
+int write_file(int sockfd, char *file_name);
 
-void write_file(int sockfd, char *file_name)
+int write_file(int sockfd, char *file_name)
 {
-	printf("write_file\n");
+	printf("[+] write_file\n");
     int n; 
     FILE *fp;
     char buff[SIZE];
@@ -24,8 +26,8 @@ void write_file(int sockfd, char *file_name)
     fp = fopen(file_name, "wb");
     if(fp == NULL)
     {
-        perror("[-]Error in creating file.");
-        exit(1);
+        perror("[-] error in creating file.");
+        return (-1);
     }
     while (1)
     {
@@ -38,6 +40,8 @@ void write_file(int sockfd, char *file_name)
         fwrite(buff, sizeof(buff), 1, fp);
         bzero(buff, SIZE);
     }
+
+    return n;
 }
 
 void func(int sockfd)
@@ -71,7 +75,7 @@ void func(int sockfd)
 
 int show_file(int sockfd)
 {
-	printf("show_file\n");
+	printf("[+] show_file\n");
 
 	char buff[SIZE];
 	bzero(buff, sizeof(buff));
@@ -100,13 +104,13 @@ int get_file(int sockfd)
 	if (0 == strncmp(buff, "ok", 2))
 	{
 		bzero(buff, sizeof(buff));
-		printf("enter file name: ");
+		printf("[+] enter file name: ");
 		scanf("%s", &file_name);
 		strncpy(buff, file_name, sizeof(file_name));
 		write(sockfd, buff, sizeof(buff));
 		write_file(sockfd, file_name);
 	}
-	printf("end get file\n");
+	printf("[+] end get file\n");
 }
 
 
@@ -119,29 +123,29 @@ int main()
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1) 
 	{
-		printf("socket creation failed...\n");
-		exit(0);
+		printf("[-] socket creation failed...\n");
+		return (-1);
 	}
 	else
 	{
-		printf("Socket successfully created..\n");
+		printf("[+] Socket successfully created..\n");
 	}
 	bzero(&servaddr, sizeof(servaddr));
 
 	// assign IP, PORT
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+	servaddr.sin_addr.s_addr = inet_addr(IP_ADDRESS);
 	servaddr.sin_port = htons(PORT);
 
 	// connect the client socket to server socket
 	if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) 
 	{
-		printf("connection with the server failed...\n");
-		exit(0);
+		printf("[-] connection with the server failed...\n");
+		return (-1);
 	}
 	else
 	{
-		printf("connected to the server..\n");
+		printf("[+] connected to the server..\n");
 	}
 
 	// function for chat
