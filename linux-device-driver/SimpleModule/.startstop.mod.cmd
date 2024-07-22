@@ -1,0 +1,1 @@
+savedcmd_/home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/startstop.mod := printf '%s\n'   start.o stop.o | awk '!x[$$0]++ { print("/home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/"$$0) }' > /home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/startstop.mod

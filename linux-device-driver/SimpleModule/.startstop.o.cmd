@@ -1,0 +1,1 @@
+savedcmd_/home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/startstop.o := ld -m elf_x86_64 -z noexecstack   -r -o /home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/startstop.o @/home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/startstop.mod 
