@@ -1,1 +1,0 @@
-savedcmd_/home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/hello-1.mod := printf '%s\n'   hello-1.o | awk '!x[$$0]++ { print("/home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/"$$0) }' > /home/ont/workspaces/linux-system-programming/linux-device-driver/SimpleModule/hello-1.mod
