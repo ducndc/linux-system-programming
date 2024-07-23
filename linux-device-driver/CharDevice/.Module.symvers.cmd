@@ -1,0 +1,1 @@
+savedcmd_/home/ont/workspaces/linux-system-programming/linux-device-driver/CharDevice/Module.symvers :=  scripts/mod/modpost -m -a      -o /home/ont/workspaces/linux-system-programming/linux-device-driver/CharDevice/Module.symvers -T /home/ont/workspaces/linux-system-programming/linux-device-driver/CharDevice/modules.order -i Module.symvers -e 
