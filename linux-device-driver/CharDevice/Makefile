@@ -6,6 +6,7 @@ obj-m += procfs3.o
 obj-m += procfs4.o
 obj-m += hello-sysfs.o
 #obj-m += ioctl.o
+obj-m += syscall-steal.o
 
 PWD := $(CURDIR)
 
